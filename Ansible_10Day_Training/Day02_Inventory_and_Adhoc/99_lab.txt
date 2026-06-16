@@ -1,0 +1,29 @@
+================================================================
+ DAY 2 - HANDS ON LAB
+================================================================
+
+TASK 1
+  Build an inventory with two groups: [web] and [db].
+  Put node4 in web. Add the http_port variable to node4.
+
+TASK 2
+  Create group_vars/web.yml with a variable myfile.
+  Create host_vars/node4.yml with mycmd and ip.
+
+TASK 3  (ad-hoc practice - run each and read the output)
+  - ping all hosts
+  - run "uptime" on web using the command module
+  - run "lsmod | wc -l" on node4 using the shell module
+    (notice the pipe only works with shell, not command)
+  - create a file /tmp/lab2.txt on db using the file module
+  - install the 'ksh' package on web using dnf (--become)
+
+TASK 4
+  Use the setup module to find the OS family of node4:
+      ansible node4 -m setup -a "filter=ansible_os_family"
+
+SUCCESS CRITERIA
+  - your inventory groups resolve (ansible web --list-hosts)
+  - the shell pipe command returns a number
+  - ksh is installed on the web hosts
+================================================================

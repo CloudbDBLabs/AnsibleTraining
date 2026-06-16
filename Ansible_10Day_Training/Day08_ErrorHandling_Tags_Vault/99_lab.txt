@@ -1,0 +1,31 @@
+================================================================
+ DAY 8 - HANDS ON LAB
+================================================================
+
+ERROR HANDLING
+  TASK 1  Add ignore_errors to a failing task and prove the play
+          continues.
+  TASK 2  Use changed_when: false on a read-only command and confirm
+          it no longer shows as 'changed'.
+  TASK 3  Build a block with 3 tasks where the 2nd fails; add a
+          rescue and an always section. Observe which run.
+
+TAGS
+  TASK 4  Tag several tasks (install / web / prod / never). Then:
+            - run only 'install'
+            - skip 'install'
+            - run 'never'
+            - list all tags
+
+VAULT
+  TASK 5  Create a secrets file with db_password. Encrypt it with
+          ansible-vault encrypt. Run a playbook that loads it via
+          vars_files using --ask-vault-pass.
+  TASK 6  Create a .vault_pass file (chmod 600) and run the same
+          playbook with --vault-password-file.
+
+SUCCESS CRITERIA
+  - the rescue block runs only when the block fails; always always runs
+  - --tags / --skip-tags select the right tasks
+  - the encrypted file shows $ANSIBLE_VAULT header when you 'cat' it
+================================================================

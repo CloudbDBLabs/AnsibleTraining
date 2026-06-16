@@ -1,0 +1,32 @@
+================================================================
+ DAY 4 - HANDS ON LAB
+================================================================
+
+HANDLERS
+  TASK 1
+    Write a playbook with 4 tasks. Make task-2 notify a handler
+    called "callone" that prints a debug message. Run it and observe
+    that the handler runs ONCE at the very end.
+
+  TASK 2
+    Install httpd and copy a config file; both tasks notify a single
+    "restart service" handler. Run twice and notice the handler is
+    skipped on the second run (nothing changed).
+
+CONDITIONALS
+  TASK 3
+    Write tasks with when: for 10==10, 10==20, ("45"|int)>40.
+    Predict which run and which are skipped, then verify.
+
+  TASK 4
+    Install the zsh package ONLY on RedHat-family hosts version 8+
+    using a combined and-condition on facts.
+
+  TASK 5
+    Define a list pkg2 and a scalar pkg1. Print a message only when
+    pkg1 is "in" pkg2.
+
+SUCCESS CRITERIA
+  - the handler runs only after a changed task, and only once
+  - the conditional tasks are skipped/run exactly as predicted
+================================================================

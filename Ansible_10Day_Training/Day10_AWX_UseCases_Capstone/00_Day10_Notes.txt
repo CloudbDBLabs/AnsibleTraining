@@ -1,0 +1,56 @@
+================================================================
+ DAY 10 - AWX OVERVIEW, USE CASES & CAPSTONE          (2 hours)
+================================================================
+
+----------------------------------------------------------------
+PART A - ANSIBLE AWX  (web UI / API on top of Ansible)
+----------------------------------------------------------------
+  AWX is the open-source upstream of Ansible Automation Platform
+  (Tower). It gives a web UI, REST API, RBAC and scheduling on top
+  of the same playbooks we have been writing.
+
+  CORE COMPONENTS
+    1. Projects        - where playbooks live (synced from GitHub)
+    2. Inventories     - hosts and groups
+    3. Credentials     - SSH keys / passwords (stored securely)
+    4. Job Templates   - a blueprint to run a playbook
+                         = project + inventory + credentials + playbook
+    5. Schedules       - run jobs at set times (like cron)
+    6. Execution Env   - containerised Ansible runtime images
+
+  TYPICAL WORKFLOW
+    1. Admin pushes playbooks to GitHub
+    2. AWX syncs the project from GitHub
+    3. User selects a Job Template
+    4. AWX connects to the target hosts using stored credentials
+    5. AWX runs the playbook inside an execution environment
+    6. AWX shows results and logs in the UI
+
+  INSTALL (high level)
+    AWX is installed with the AWX Operator on Kubernetes
+    (k8s / OpenShift / minikube).
+
+----------------------------------------------------------------
+PART B - REAL-WORLD USE CASES (files in this folder)
+----------------------------------------------------------------
+  uc01_os_updates.yml          - patch the OS, reboot if kernel changed
+  uc02_lamp_stack.yml          - install Apache + MariaDB + PHP
+  uc03_oracledb_prereqs.yml    - Oracle DB prerequisites (packages,
+                                 users, groups, kernel settings, dirs)
+  These combine everything from the 10 days: facts, when, loops,
+  handlers, templates, become.
+
+----------------------------------------------------------------
+PART C - CAPSTONE (see 90_capstone.txt)
+----------------------------------------------------------------
+  Build a small, role-based project that provisions a web+db host
+  end to end, using a vault-encrypted secret and tags.
+
+----------------------------------------------------------------
+FILES IN THIS FOLDER
+----------------------------------------------------------------
+  01_awx_overview.txt
+  uc01_os_updates.yml   uc02_lamp_stack.yml   uc03_oracledb_prereqs.yml
+  90_capstone.txt       91_capstone_site.yml
+  99_lab.txt
+================================================================

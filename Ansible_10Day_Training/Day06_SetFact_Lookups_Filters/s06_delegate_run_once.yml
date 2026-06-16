@@ -1,0 +1,12 @@
+---
+- name: delegate_to and run_once
+  hosts: web
+  tasks:
+    - name: run this task once, on the control node only
+      command: /bin/true
+      delegate_to: localhost
+      run_once: true
+
+    - name: this runs on every host as normal
+      debug:
+        msg: "running on {{ inventory_hostname }}"

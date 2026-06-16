@@ -1,0 +1,29 @@
+================================================================
+ DAY 3 - HANDS ON LAB
+================================================================
+
+TASK 1
+  Write a playbook that installs the 'ksh' package on node4
+  and then runs the date command. Run it with --check first.
+
+TASK 2
+  Write a playbook with a vars: section holding myos, myversion,
+  count. Print all three using one debug task.
+
+TASK 3
+  Run a shell command (e.g. "uname -a"), register the result,
+  and print result.stdout with debug.
+
+TASK 4
+  Write a playbook that prints the hostname, OS family and IP of
+  every host using gathered facts.
+
+TASK 5
+  Create vars/app.yml with app_name and app_port. Load it with
+  vars_files and print both. Then override app_port using -e.
+
+SUCCESS CRITERIA
+  - --syntax-check passes on all playbooks
+  - the register/debug playbook shows the command output
+  - the facts playbook prints correct OS info per node
+================================================================

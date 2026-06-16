@@ -1,0 +1,94 @@
+================================================================
+ DAY 8 - ERROR HANDLING, TAGS & VAULT                 (2 hours)
+================================================================
+
+----------------------------------------------------------------
+PART A - ERROR HANDLING
+----------------------------------------------------------------
+  By default, if a task fails (non-zero return code) the play STOPS
+  for that host. We can control this.
+
+  PER-TASK
+    ignore_errors: true     -> continue even if this task fails
+    failed_when: <expr>      -> define what counts as failure
+    changed_when: <expr>     -> define what counts as a change
+                                (changed_when: false keeps read-only
+                                 commands from showing as 'changed')
+
+  BLOCK / RESCUE / ALWAYS  (like try / except / finally)
+    block:    group of tasks to attempt
+    rescue:   runs ONLY if a task in the block failed
+    always:   runs every time, pass or fail
+
+    tasks:
+      - name: main block
+        block:
+          - name: task-1
+            command: /bin/true
+          - name: task-2
+            command: /bin/true
+        rescue:
+          - name: on failure
+            debug: msg="This is the rescue block"
+        always:
+          - name: cleanup
+            debug: msg="Always runs"
+
+  block also lets you set when:/become: ONCE for the whole group.
+
+----------------------------------------------------------------
+PART B - TAGS  (run or skip selected tasks)
+----------------------------------------------------------------
+  A tag is a label on a task.
+
+    - name: task1
+      command: /bin/true
+      tags: install
+    - name: task2
+      command: /bin/true
+      tags:
+        - web
+        - prod
+
+  RUN selected tags:
+    ansible-playbook p1.yml --tags install
+    ansible-playbook p1.yml --tags "install,web,prod"
+
+  SKIP selected tags:
+    ansible-playbook p1.yml --skip-tags install
+
+  SPECIAL TAG 'never':
+    task runs ONLY when you explicitly ask:  --tags never
+
+  LIST the tags in a playbook:
+    ansible-playbook p1.yml --list-tags
+
+----------------------------------------------------------------
+PART C - ANSIBLE VAULT  (encrypt sensitive data)
+----------------------------------------------------------------
+  Used to encrypt passwords, keys, secret variable files.
+
+  ansible-vault create  secrets.yml      # new encrypted file
+  ansible-vault encrypt  vars.yml         # encrypt existing file
+  ansible-vault decrypt  vars.yml         # decrypt
+  ansible-vault edit     secrets.yml      # edit in place
+  ansible-vault rekey    secrets.yml      # change the password
+  ansible-vault view     secrets.yml      # read without decrypting to disk
+
+  RUN a playbook that uses encrypted data:
+    ansible-playbook p1.yml --ask-vault-pass
+
+  NON-INTERACTIVE (automation):
+    echo "MyVaultPassword" > .vault_pass
+    chmod 600 .vault_pass
+    ansible-playbook p1.yml --vault-password-file .vault_pass
+
+----------------------------------------------------------------
+FILES IN THIS FOLDER
+----------------------------------------------------------------
+  e01_ignore_errors.yml      e02_failed_changed_when.yml
+  e03_block_rescue_always.yml
+  tg01_tags.yml
+  v01_use_secrets.yml        v02_secrets_example.yml
+  v03_vault_commands.txt     99_lab.txt
+================================================================

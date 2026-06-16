@@ -1,0 +1,26 @@
+================================================================
+ DAY 10 - HANDS ON LAB
+================================================================
+
+AWX (discussion + demo)
+  TASK 1  Map each AWX core object (Project, Inventory, Credential,
+          Job Template, Schedule, Execution Env) to something we
+          built during the course.
+
+USE CASES
+  TASK 2  Run uc01_os_updates.yml in --check mode and read what it
+          WOULD change.
+  TASK 3  Run uc02_lamp_stack.yml against the [web] group. Verify
+          httpd and mariadb are running.
+  TASK 4  Run uc03_oracledb_prereqs.yml against [db]. Verify the
+          oracle user, the groups, and /u01/app/oracle exist.
+
+CAPSTONE
+  TASK 5  Follow 90_capstone.txt: build the webapp role, encrypt a
+          secret, and run 91_capstone_site.yml --ask-vault-pass.
+
+SUCCESS CRITERIA
+  - the use-case playbooks complete without errors
+  - the capstone role installs, templates and starts the web service
+  - the vault secret is used without ever printing its value
+================================================================

@@ -1,0 +1,12 @@
+---
+- name: render a config with an if/else block
+  hosts: node4
+  vars:
+    ssl_enabled: true
+    ssl_cert: /etc/pki/tls/certs/app.crt
+    ssl_key: /etc/pki/tls/private/app.key
+  tasks:
+    - name: generate /tmp/ssl.conf
+      template:
+        src: sslconfig.j2
+        dest: /tmp/ssl.conf

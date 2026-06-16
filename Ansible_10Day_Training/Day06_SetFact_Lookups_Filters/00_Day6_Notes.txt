@@ -1,0 +1,88 @@
+================================================================
+ DAY 6 - set_fact, LOOKUPS, FILTERS, wait_for, DELEGATION  (2h)
+================================================================
+
+----------------------------------------------------------------
+1. set_fact  - create variables DURING the run
+----------------------------------------------------------------
+  - vars: section = values you know in advance.
+  - set_fact     = values computed WHILE the playbook runs
+                   (like assigning a command result to a variable
+                    in a shell script).
+
+    - set_fact: myvar="Hello world"
+    - debug: var=myvar
+
+    - set_fact: total="{{ 10 + 20.45 }}"      # simple math
+    - debug: var=total
+
+----------------------------------------------------------------
+2. lookup()  - read data from an external source (on control node)
+----------------------------------------------------------------
+  {{ lookup('plugin', 'argument') }}
+
+  Common plugins:
+    lookup('pipe', 'date +%s')          -> run a command, return output
+    lookup('env', 'HOME')               -> an environment variable
+    lookup('file', '/etc/hostname')     -> the contents of a file
+    lookup('password', '/tmp/p length=12 chars=ascii_letters')
+    lookup('ini', '...')                -> a value from an ini file
+    lookup('template', 'file.j2')       -> a rendered template
+
+  EXAMPLE - measure elapsed time
+    - set_fact: start_time="{{ lookup('pipe','date +%s') }}"
+    ... do some work ...
+    - set_fact: end_time="{{ lookup('pipe','date +%s') }}"
+    - debug: msg="elapsed = {{ end_time | int - start_time | int }}s"
+
+----------------------------------------------------------------
+3. FILTERS  - transform a value  (like a built-in function)
+----------------------------------------------------------------
+  {{ input | filter_name(arguments) }}
+
+  Common filters:
+    upper / lower            change case
+    default('x')             value if variable is undefined
+    int / float / bool       typecast
+    length                   number of items / characters
+    join(', ')               join a list into a string
+    trim                     strip surrounding whitespace
+
+  EXAMPLE
+    - set_fact: msg="Hello Team"
+    - debug:
+        msg:
+          - "Upper: {{ msg | upper }}"
+          - "Lower: {{ msg | lower }}"
+
+  Reference list of filters:
+  https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_filters.html
+
+----------------------------------------------------------------
+4. wait_for  - wait for a condition (port/file) before continuing
+----------------------------------------------------------------
+    - wait_for:
+        port: 80
+        state: started
+        timeout: 15
+        delay: 5
+
+----------------------------------------------------------------
+5. delegate_to / run_once  - run a task somewhere specific
+----------------------------------------------------------------
+  delegate_to: <host>   -> run THIS task on a different host
+                           (often the control node / localhost)
+  run_once: true        -> run the task only ONCE for the whole batch,
+                           not once per host
+
+  [web] has node1..node10, but you want a task to run only once
+  (e.g. write a summary file) -> run_once: true + delegate_to.
+
+----------------------------------------------------------------
+FILES IN THIS FOLDER
+----------------------------------------------------------------
+  s01_set_fact_basic.yml     s04_filters.yml
+  s02_set_fact_loop.yml      s05_wait_for.yml
+  s03_lookups.yml            s06_delegate_run_once.yml
+  99_lab.txt
+================================================================

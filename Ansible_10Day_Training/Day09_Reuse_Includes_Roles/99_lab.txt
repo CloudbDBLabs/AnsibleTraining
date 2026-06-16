@@ -1,0 +1,26 @@
+================================================================
+ DAY 9 - HANDS ON LAB
+================================================================
+
+INCLUDE / IMPORT
+  TASK 1  Put two tasks in install_nginx.yml (a task FILE, no hosts:).
+          include_tasks it from a play with a when: condition.
+  TASK 2  Create mydir/ with pkg.yml, app.yml, db.yml. Use
+          include_vars to load one file, then the whole directory,
+          and print values from each.
+  TASK 3  Create play_a.yml and play_b.yml. Combine them in
+          site.yml using import_playbook and run site.yml.
+
+ROLES
+  TASK 4  Scaffold a role:   ansible-galaxy role init DB
+  TASK 5  Put mydb_name/mydb_port in roles/DB/vars/main.yml.
+          Put a debug task in roles/DB/tasks/main.yml that prints them.
+          Add a template in roles/DB/templates and render it from the
+          role's tasks. Add a handler in roles/DB/handlers.
+  TASK 6  Write a play with  roles: [DB]  and run it.
+
+SUCCESS CRITERIA
+  - include_vars makes variables from mydir available
+  - import_playbook runs both plays in order
+  - the DB role runs its tasks, template and handler
+================================================================

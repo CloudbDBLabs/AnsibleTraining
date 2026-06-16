@@ -1,0 +1,95 @@
+================================================================
+ DAY 3 - PLAYBOOKS, VARIABLES, REGISTER, FACTS        (2 hours)
+================================================================
+
+GOAL OF TODAY
+  - Write and run real playbooks (multiple ordered tasks)
+  - Use variables (vars, vars_files, extra-vars)
+  - Capture task output with register and display with debug
+  - Use facts gathered about the node
+
+----------------------------------------------------------------
+1. PLAYBOOK STRUCTURE
+----------------------------------------------------------------
+  A playbook is a list of one or more PLAYS.
+  A play has sections:
+
+    - TARGET   : which hosts + permissions
+                   hosts: web
+                   become: yes
+                   gather_facts: yes
+    - VARIABLE : vars: / vars_files:
+    - TASKS    : the modules to run (in order)
+    - HANDLERS : secondary tasks (Day 4)
+    - TEMPLATES: jinja2 (Day 7)
+
+  ---
+  - name: my play
+    hosts: node4
+    vars:
+      pkg: ksh
+    tasks:
+      - name: install {{ pkg }}
+        dnf:
+          name: "{{ pkg }}"
+          state: present
+
+----------------------------------------------------------------
+2. RUNNING A PLAYBOOK
+----------------------------------------------------------------
+  ansible-playbook p1.yml                 # run it
+  ansible-playbook p1.yml --syntax-check  # check YAML/structure only
+  ansible-playbook p1.yml --check         # dry run (no changes)
+  ansible-playbook p1.yml -v              # verbose (-vvv for more)
+  ansible-playbook p1.yml --list-tasks    # preview the task list
+
+----------------------------------------------------------------
+3. VARIABLES
+----------------------------------------------------------------
+  - In the play:           vars:
+  - From a file:           vars_files:
+  - From inventory:        host_vars / group_vars
+  - From the command line: -e "key=value"   (highest priority)
+
+  ansible-playbook p1.yml -e "pkg=zsh"
+
+  Reference a variable with double braces:   {{ pkg }}
+
+----------------------------------------------------------------
+4. register + debug
+----------------------------------------------------------------
+  register : capture the result of a module into a variable.
+             It holds .stdout .stderr .rc .changed and more.
+  debug    : print a message or a variable to the screen.
+               debug: msg="..."        -> print text
+               debug: var=myvar        -> print a variable
+
+  NOTE on 'changed':
+    - debug          -> changed is ALWAYS false
+    - command/shell  -> changed is ALWAYS true (it cannot tell)
+
+----------------------------------------------------------------
+5. FACTS
+----------------------------------------------------------------
+  - Facts = information Ansible gathers about each node
+    (OS, IP, memory, disks, python...).
+  - Gathered automatically unless you set  gather_facts: no
+  - Module that gathers them:  setup
+
+  Useful facts:
+    ansible_hostname
+    ansible_distribution            (CentOS / OracleLinux / Ubuntu)
+    ansible_os_family               (RedHat / Debian)
+    ansible_distribution_version
+    ansible_default_ipv4.address
+
+  ansible node4 -m setup -a "filter=ansible_distribution*"
+
+----------------------------------------------------------------
+FILES IN THIS FOLDER
+----------------------------------------------------------------
+  p01_first_playbook.yml      p04_facts.yml
+  p02_variables.yml           p05_extra_vars.yml
+  p03_register_debug.yml      p06_vars_from_file.yml + vars/app.yml
+  99_lab.txt
+================================================================

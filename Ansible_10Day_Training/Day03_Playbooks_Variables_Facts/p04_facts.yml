@@ -1,0 +1,12 @@
+---
+- name: display ansible facts
+  hosts: all
+  tasks:
+    - name: show host and OS information
+      debug:
+        msg:
+          - "Hostname     : {{ ansible_hostname }}"
+          - "Distribution : {{ ansible_distribution }}"
+          - "OS family    : {{ ansible_os_family }}"
+          - "Version      : {{ ansible_distribution_version }}"
+          - "IP address   : {{ ansible_default_ipv4.address }}"

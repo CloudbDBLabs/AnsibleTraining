@@ -1,0 +1,15 @@
+---
+- name: with_dict - iterate key/value pairs
+  hosts: node4
+  become: yes
+  vars:
+    mydict:
+      user1: 2001
+      user2: 2002
+  tasks:
+    - name: create users from a dictionary
+      user:
+        name: "{{ item.key }}"
+        uid: "{{ item.value }}"
+        state: present
+      with_dict: "{{ mydict }}"

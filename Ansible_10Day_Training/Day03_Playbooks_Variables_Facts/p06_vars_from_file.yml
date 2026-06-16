@@ -1,0 +1,9 @@
+---
+- name: load variables from a separate file
+  hosts: localhost
+  vars_files:
+    - vars/app.yml
+  tasks:
+    - name: print variables loaded from the file
+      debug:
+        msg: "{{ app_name }} runs on port {{ app_port }}; admins={{ admins }}"

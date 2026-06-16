@@ -1,0 +1,16 @@
+---
+- name: failed_when and changed_when demo
+  hosts: node4
+  tasks:
+    - name: a read-only command should not report 'changed'
+      command: cat /etc/oracle-release
+      register: rel
+      changed_when: false
+
+    - name: fail only when a specific string is found
+      shell: "echo deployment OK"
+      register: dep
+      failed_when: "'FATAL' in dep.stdout"
+
+    - debug:
+        var: rel.stdout

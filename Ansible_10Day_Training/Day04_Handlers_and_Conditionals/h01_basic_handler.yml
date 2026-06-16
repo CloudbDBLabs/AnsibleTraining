@@ -1,0 +1,19 @@
+---
+- name: handler block demo
+  hosts: localhost
+  tasks:
+    - name: task-1
+      debug:
+        msg: "Welcome to the task section"
+
+    - name: task-2 (this one notifies)
+      command: date
+      notify: callone
+
+    - name: task-3
+      debug:
+        msg: "Task-3 execution"
+  handlers:
+    - name: callone
+      debug:
+        msg: "This is the handler block (runs at the end, once)"

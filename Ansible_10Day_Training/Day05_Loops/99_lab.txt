@@ -1,0 +1,28 @@
+================================================================
+ DAY 5 - HANDS ON LAB
+================================================================
+
+TASK 1
+  Print three shell names (sh, bash, ksh) using loop and {{ item }}.
+
+TASK 2
+  Create users demo1..demo5 with ONE looping task (user module).
+
+TASK 3
+  Create 4 groups, then create 4 users where each user belongs to a
+  different group and has a different uid. Use a loop over a list of
+  dictionaries ( {K1:..,K2:..,K3:..} ).
+
+TASK 4
+  Use with_dict to create two users from a dictionary of name->uid.
+
+TASK 5
+  Use with_sequence to create userA1..userA5.
+
+TASK 6
+  Use with_nested to print every pair of (OS, version).
+
+SUCCESS CRITERIA
+  - one looping task replaces five separate tasks
+  - users/groups appear on the node (verify with: getent passwd)
+================================================================

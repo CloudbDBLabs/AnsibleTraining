@@ -1,0 +1,64 @@
+================================================================
+ DAY 4 - HANDLERS & CONDITIONALS                      (2 hours)
+================================================================
+
+PART A - HANDLERS
+----------------------------------------------------------------
+  - A handler is a SECONDARY task that runs only when NOTIFIED.
+  - A task notifies a handler with:  notify: <handler name>
+  - The handler runs ONLY IF the notifying task reported "changed".
+  - Handlers run ONCE, at the END of the play (after all tasks).
+
+  TYPICAL USE: change a config file -> notify -> restart the service
+               (the restart happens only if the file actually changed)
+
+  tasks:
+    - name: install httpd
+      dnf: name=httpd state=present
+      notify: restart httpd
+  handlers:
+    - name: restart httpd
+      service: name=httpd state=restarted
+
+  MULTIPLE HANDLERS: a task can notify a list of handlers.
+      notify:
+        - one
+        - two
+
+  listen: group several handlers under one logical name, then
+          notify that name.
+
+  meta: flush_handlers -> force notified handlers to run NOW
+        (instead of waiting for the end of the play).
+
+----------------------------------------------------------------
+PART B - CONDITIONALS  (when:)
+----------------------------------------------------------------
+  - Ansible does NOT use if/else blocks in tasks.
+  - Instead each task can carry a  when: <expression>.
+  - If the expression is TRUE  -> the module is pushed and run.
+    If FALSE -> the task is skipped.
+
+  OPERATORS
+    relational : ==  !=  <  <=  >  >=
+    logical    : and  or  not
+    membership : in   not in
+
+  TYPECAST FILTERS (convert a value before comparing)
+    "45" | int      -> 45    (integer)
+    "45" | float    -> 45.0
+    "true" | bool   -> True
+
+  EXAMPLES
+    when: 10 == 10
+    when: ("45" | int) > 40
+    when: ansible_os_family == "RedHat"
+    when: ansible_os_family == "RedHat" and (ansible_distribution_major_version | int) >= 8
+    when: pkg1 in pkg2          # membership
+
+  CONDITION ON A REGISTERED RESULT
+    - shell: systemctl is-active httpd
+      register: r
+    - debug: msg="httpd is running"
+      when: r.rc == 0
+================================================================

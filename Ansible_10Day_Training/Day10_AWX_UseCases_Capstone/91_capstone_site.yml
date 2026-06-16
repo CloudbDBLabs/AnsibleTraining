@@ -1,0 +1,20 @@
+---
+# Capstone starter. Build the 'webapp' role with:
+#   ansible-galaxy role init webapp
+# Encrypt your secret with:
+#   ansible-vault create secrets.yml      # define: app_token: "..."
+# Run with:
+#   ansible-playbook 91_capstone_site.yml --ask-vault-pass
+- name: Capstone - provision a simple web app
+  hosts: web
+  become: yes
+  vars:
+    app_name: payments-portal
+  vars_files:
+    - secrets.yml
+  pre_tasks:
+    - name: confirm the secret loaded (length only, not the value)
+      debug:
+        msg: "app_token length = {{ app_token | length }}"
+  roles:
+    - webapp

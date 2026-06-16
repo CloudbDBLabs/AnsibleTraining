@@ -1,0 +1,2 @@
+# lowest priority - easy to override from the play or inventory
+mydb_user: admin

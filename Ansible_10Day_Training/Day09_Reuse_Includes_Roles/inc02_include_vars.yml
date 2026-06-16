@@ -1,0 +1,19 @@
+---
+- name: load variables from a file and from a directory
+  hosts: localhost
+  tasks:
+    - name: load a single variable file
+      include_vars:
+        file: mydir/app.yml
+
+    - name: show a value from it
+      debug:
+        msg: "app_name={{ app_name }} app_port={{ app_port }}"
+
+    - name: load EVERY variable file in mydir
+      include_vars:
+        dir: mydir
+
+    - name: show values from the other files
+      debug:
+        msg: "pkg1={{ pkg1 }} db_name={{ db_name }}"

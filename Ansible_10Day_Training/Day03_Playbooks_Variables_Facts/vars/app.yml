@@ -1,0 +1,5 @@
+app_name: payments
+app_port: 8080
+admins:
+  - alice
+  - bob

@@ -1,0 +1,30 @@
+================================================================
+ DAY 6 - HANDS ON LAB
+================================================================
+
+TASK 1
+  Use set_fact to create myvar="Hello world" and print it two ways
+  (var and msg). Then set_fact total = 10 + 20.45 and print it.
+
+TASK 2
+  Use lookup('pipe','date +%s') before and after a short task and
+  print the elapsed seconds.
+
+TASK 3
+  Use lookup('env','HOME') and lookup('file','/etc/oracle-release')
+  in debug messages.
+
+TASK 4
+  Take a string and print it upper, lower, trimmed, and its length.
+  Then print an undefined variable using default('N/A').
+
+TASK 5
+  Write a play on the [web] group with one task that uses
+  delegate_to: localhost and run_once: true, and one normal task.
+  Observe the difference in how many times each runs.
+
+SUCCESS CRITERIA
+  - set_fact values are usable in later tasks
+  - the elapsed-time calculation prints a number
+  - the run_once task runs only a single time
+================================================================

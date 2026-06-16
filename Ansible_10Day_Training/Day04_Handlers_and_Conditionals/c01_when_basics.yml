@@ -1,0 +1,23 @@
+---
+- name: when basics - true/false and typecast
+  hosts: localhost
+  tasks:
+    - name: runs (10 == 10)
+      debug:
+        msg: "Task-1 execution"
+      when: 10 == 10
+
+    - name: skipped (10 == 20)
+      debug:
+        msg: "Task-2 execution"
+      when: 10 == 20
+
+    - name: a non-empty string is logically true
+      debug:
+        msg: "Task-3 execution"
+      when: "45"
+
+    - name: typecast string to int before comparing
+      debug:
+        msg: "Task-4 execution"
+      when: ("45" | int) > 40

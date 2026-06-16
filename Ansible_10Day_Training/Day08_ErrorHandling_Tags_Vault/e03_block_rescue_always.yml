@@ -1,0 +1,20 @@
+---
+- name: block / rescue / always demo
+  hosts: localhost
+  tasks:
+    - name: main block
+      block:
+        - name: task-1
+          command: /bin/true
+        - name: task-2 (force a failure to trigger rescue)
+          command: /bin/false
+        - name: task-3 (will be skipped because task-2 failed)
+          command: /bin/true
+      rescue:
+        - name: task-4
+          debug:
+            msg: "This is the rescue block - a task failed"
+      always:
+        - name: task-5
+          debug:
+            msg: "This always runs (cleanup / logging)"

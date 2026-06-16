@@ -1,0 +1,15 @@
+---
+- name: variable section demo
+  hosts: localhost
+  vars:
+    myos: Linux
+    myversion: 5.67
+    count: 120
+  tasks:
+    - name: task-1 print all three
+      debug:
+        msg: "myos={{ myos }} version={{ myversion }} count={{ count }}"
+
+    - name: task-2 print one variable
+      debug:
+        var: myos

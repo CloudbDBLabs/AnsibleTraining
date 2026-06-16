@@ -1,0 +1,10 @@
+---
+# Run with:  ansible-playbook p05_extra_vars.yml -e "pkg=zsh"
+- name: install a package passed from the command line
+  hosts: node4
+  become: yes
+  tasks:
+    - name: install {{ pkg }}
+      dnf:
+        name: "{{ pkg }}"
+        state: present

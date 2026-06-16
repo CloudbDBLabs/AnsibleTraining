@@ -1,0 +1,57 @@
+---
+# LAMP stack (Apache + MariaDB + PHP) on Oracle Linux.
+# (No firewall/network tasks - service installation and config only.)
+- name: Deploy a LAMP stack on Oracle Linux
+  hosts: web
+  become: yes
+  vars:
+    php_packages:
+      - php
+      - php-mysqlnd
+      - php-cli
+      - php-common
+    index_page: /var/www/html/index.php
+  tasks:
+    - name: Ensure EPEL is available
+      yum:
+        name: "oracle-epel-release-el{{ ansible_distribution_major_version }}"
+        state: present
+      ignore_errors: yes
+
+    - name: Install Apache, MariaDB and PHP
+      yum:
+        name:
+          - httpd
+          - mariadb-server
+          - "{{ php_packages }}"
+        state: present
+
+    - name: Start and enable Apache
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+      notify: restart apache
+
+    - name: Start and enable MariaDB
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
+
+    - name: Create a PHP info page
+      copy:
+        dest: "{{ index_page }}"
+        content: |
+          <?php
+          phpinfo();
+          ?>
+        owner: apache
+        group: apache
+        mode: '0644'
+      notify: restart apache
+  handlers:
+    - name: restart apache
+      service:
+        name: httpd
+        state: restarted

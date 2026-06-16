@@ -1,0 +1,86 @@
+================================================================
+ DAY 5 - LOOPS                                        (2 hours)
+================================================================
+
+GOAL OF TODAY
+  - Replace many repeated tasks with ONE looping task
+  - Learn loop, item, and the with_* family
+
+----------------------------------------------------------------
+1. WHY LOOP
+----------------------------------------------------------------
+  WITHOUT a loop (repetitive):
+    - user: name=demo1 state=present
+    - user: name=demo2 state=present
+    - user: name=demo3 state=present
+
+  WITH a loop (clean):
+    - user:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - demo1
+        - demo2
+        - demo3
+
+  "item" is a PRE-DEFINED placeholder = the current value of the loop.
+
+----------------------------------------------------------------
+2. loop OVER A LIST
+----------------------------------------------------------------
+    debug: msg="{{ item }}"
+    loop:
+      - sh
+      - bash
+      - ksh
+
+----------------------------------------------------------------
+3. loop OVER A LIST OF DICTIONARIES
+----------------------------------------------------------------
+    user:
+      name: "{{ item.K1 }}"
+      group: "{{ item.K2 }}"
+      uid: "{{ item.K3 }}"
+      state: present
+    loop:
+      - {K1: Ua, K2: sales, K3: 1234}
+      - {K1: Ub, K2: prod,  K3: 2232}
+
+----------------------------------------------------------------
+4. THE with_* FAMILY  (older but very common)
+----------------------------------------------------------------
+  with_items    - iterate a list (same as loop)
+  with_dict     - iterate a dictionary -> item.key , item.value
+  with_nested   - cartesian product of two lists
+  with_sequence - generate a number range: start=1 end=5
+  with_fileglob - iterate files matching a wildcard (e.g. ./*.log)
+
+  with_dict example:
+    user:
+      name: "{{ item.key }}"
+      uid:  "{{ item.value }}"
+      state: present
+    with_dict:
+      user1: 2001
+      user2: 2002
+
+  with_sequence example:
+    user:
+      name: "userA{{ item }}"
+      state: present
+    with_sequence: start=1 end=5
+
+----------------------------------------------------------------
+5. LOOP + CONDITION + REGISTER
+----------------------------------------------------------------
+  - You can add  when:  to act on only some items.
+  - register on a looping task stores results in  <var>.results (a list).
+
+----------------------------------------------------------------
+FILES IN THIS FOLDER
+----------------------------------------------------------------
+  l01_loop_list.yml        l04_with_dict.yml
+  l02_loop_users.yml       l05_with_sequence.yml
+  l03_loop_dicts.yml       l06_with_nested.yml
+  l07_with_fileglob.yml    99_lab.txt
+================================================================

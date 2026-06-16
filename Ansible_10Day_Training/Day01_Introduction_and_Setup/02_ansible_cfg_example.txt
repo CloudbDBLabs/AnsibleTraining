@@ -1,0 +1,25 @@
+# ================================================================
+# Sample ansible.cfg  (place in your project directory: ./ansible.cfg)
+# ================================================================
+
+[defaults]
+# where the list of hosts lives
+inventory = ./myinventory
+
+# do not prompt to accept SSH host key on first connect (lab convenience)
+host_key_checking = False
+
+# default user to log in as (override per host in inventory if needed)
+remote_user = root
+
+# how many hosts to configure in parallel
+forks = 10
+
+# where roles are searched
+roles_path = ./roles
+
+[privilege_escalation]
+# become root when a task needs it
+become = False
+become_method = sudo
+become_user = root

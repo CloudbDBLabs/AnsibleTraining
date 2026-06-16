@@ -1,0 +1,39 @@
+================================================================
+ DAY 10 - CAPSTONE PROJECT
+================================================================
+
+GOAL
+  Bring together everything from the 10 days into one small,
+  role-based project.
+
+REQUIREMENTS
+  1. A role called 'webapp' that:
+       - installs httpd (use the package module)
+       - renders an index.html from a template (Jinja2) using a
+         variable app_name
+       - starts httpd via a handler (notify)
+       - tags its install tasks with 'install'
+  2. A secret:
+       - store a variable app_token in a vault-encrypted file
+       - load it with vars_files and print its length (do NOT print
+         the value itself)
+  3. A site.yml that:
+       - targets the [web] group, become: yes
+       - applies the webapp role
+       - is runnable with:  ansible-playbook site.yml --ask-vault-pass
+
+STRETCH GOALS
+  - Add a second role 'baseline' that creates an app user and an
+    app directory, and make webapp depend on baseline (meta).
+  - Use --tags install to run only the package installation.
+  - Add an os_updates play (from uc01) as a separate import_playbook.
+
+A STARTER site.yml is provided as 91_capstone_site.yml. Build the
+role directory yourself with:  ansible-galaxy role init webapp
+
+SUCCESS CRITERIA
+  - ansible-playbook site.yml --syntax-check passes
+  - the rendered index.html contains the app_name value
+  - httpd is started; the handler fired only when something changed
+  - the vault secret loads and its length prints (value stays hidden)
+================================================================

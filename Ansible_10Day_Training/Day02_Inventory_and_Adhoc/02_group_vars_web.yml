@@ -1,0 +1,4 @@
+# group_vars/web.yml  - variables shared by every host in [web]
+myfile: /etc/oracle-release
+app_env: production
+http_port: 80

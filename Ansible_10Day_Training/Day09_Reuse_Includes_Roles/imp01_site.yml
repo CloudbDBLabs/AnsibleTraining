@@ -1,0 +1,4 @@
+---
+# Combine multiple playbooks with import_playbook (run: ansible-playbook imp01_site.yml)
+- import_playbook: play_a.yml
+- import_playbook: play_b.yml

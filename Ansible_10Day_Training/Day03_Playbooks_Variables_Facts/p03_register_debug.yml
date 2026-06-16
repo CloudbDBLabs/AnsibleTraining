@@ -1,0 +1,15 @@
+---
+- name: register and debug demo
+  hosts: node4
+  tasks:
+    - name: task-1 run uptime and capture the result
+      command: uptime
+      register: result
+
+    - name: task-2 show the captured stdout
+      debug:
+        var: result.stdout
+
+    - name: task-3 show it inside a message
+      debug:
+        msg: "uptime output is: {{ result.stdout }}"

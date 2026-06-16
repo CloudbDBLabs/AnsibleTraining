@@ -1,0 +1,7 @@
+---
+- name: reuse a task file with include_tasks
+  hosts: node4
+  tasks:
+    - name: dynamically include the web install tasks
+      include_tasks: install_nginx.yml
+      when: ansible_os_family == "RedHat"

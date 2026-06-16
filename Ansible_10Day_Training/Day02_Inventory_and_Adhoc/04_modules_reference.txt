@@ -1,0 +1,42 @@
+# ================================================================
+# DAY 2 - Ad-hoc command examples by module
+# ================================================================
+
+# --- connectivity ---
+ansible all -m ping
+
+# --- command (default) : run a binary, no shell features ---
+ansible web -m command -a "uptime"
+ansible node4 -a "cat /etc/oracle-release"
+
+# --- shell : pipes and redirects work here ---
+ansible node4 -m shell -a "lsmod | wc -l"
+ansible node4 -m shell -a "echo $HOME"
+
+# --- copy : push a file to the nodes ---
+ansible web -m copy -a "src=./httpd.conf dest=/tmp/httpd.conf"
+ansible web -m copy -a "content='hello from copy' dest=/tmp/f1.log"
+
+# --- file : create / remove / permissions ---
+ansible db -m file -a "path=/tmp/demo.txt state=touch"
+ansible db -m file -a "path=/opt/app state=directory mode=0755" --become
+ansible db -m file -a "path=/tmp/demo.txt state=absent"
+
+# --- fetch : pull a file from nodes to the control node ---
+ansible db -m fetch -a "src=/etc/oracle-release dest=./collected/"
+
+# --- package management (Oracle Linux / RedHat) ---
+ansible web -m dnf -a "name=ksh state=present" --become
+ansible web -m yum -a "name=git state=latest" --become
+ansible web -m dnf -a "name=ksh state=absent" --become
+
+# --- service ---
+ansible web -m service -a "name=httpd state=started enabled=yes" --become
+
+# --- users and groups ---
+ansible node4 -m group -a "name=QA state=present" --become
+ansible node4 -m user -a "name=u1 group=QA uid=345 state=present" --become
+
+# --- facts ---
+ansible node4 -m setup
+ansible node4 -m setup -a "filter=ansible_distribution*"

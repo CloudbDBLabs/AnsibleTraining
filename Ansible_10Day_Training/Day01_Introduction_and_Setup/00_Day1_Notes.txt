@@ -1,0 +1,108 @@
+================================================================
+ DAY 1 - INTRODUCTION TO ANSIBLE, YAML & SETUP        (2 hours)
+================================================================
+
+GOAL OF TODAY
+  - Understand what Ansible is and why we use it
+  - Learn the YAML format (the language of playbooks)
+  - Install Ansible and understand the control node / managed node model
+  - Run our very first connectivity check
+
+----------------------------------------------------------------
+1. WHAT IS ANSIBLE
+----------------------------------------------------------------
+  - An open-source IT automation tool.
+  - Used for : Configuration management, Application deployment,
+               Orchestration, Provisioning.
+  - Written in Python. Playbooks are written in YAML.
+
+  WHY ANSIBLE
+    - Agentless  -> nothing to install on the managed machines.
+                    It uses the SSH that is already there.
+    - Push model -> the control node pushes small programs (modules)
+                    to the remote machines, runs them, removes them.
+    - Idempotent -> running the same playbook again does NOT make
+                    duplicate changes. It only changes what is needed.
+    - Simple     -> human-readable YAML, very little code.
+
+----------------------------------------------------------------
+2. ARCHITECTURE
+----------------------------------------------------------------
+        CONTROL NODE                       MANAGED NODES
+   (where Ansible is installed)       (the servers we manage)
+   ---------------------------        -----------------------
+     ansible / ansible-playbook   --->   node1  (only SSH + python)
+     inventory  (list of hosts)   SSH    node2
+     ansible.cfg                   --->   node3
+     playbooks / roles                    node4
+
+   FLOW for every task:
+     1. connect to the node over SSH
+     2. copy a small module (python) to the node
+     3. execute it on the node
+     4. return the result (JSON) to the control node
+     5. delete the module from the node
+
+----------------------------------------------------------------
+3. YAML BASICS  (see file 01_yaml_basics.txt for full detail)
+----------------------------------------------------------------
+  - A playbook is a YAML file.
+  - Format is always   key: value     (note the SPACE after colon)
+  - Indentation uses SPACES, never TABS.
+  - A list item starts with   "- "
+  - A file usually starts with   ---
+
+  key: value          # a single value (scalar)
+  packages:           # a list
+    - httpd
+    - git
+  user:               # a dictionary / map
+    name: app
+    uid: 1001
+
+----------------------------------------------------------------
+4. INSTALLATION (Oracle Linux 8 / RHEL family)
+----------------------------------------------------------------
+  # check python first
+  python3 --version
+
+  # install via dnf (enable EPEL on Oracle Linux)
+  sudo dnf install -y oracle-epel-release-el8
+  sudo dnf install -y ansible
+
+  # OR install latest via pip
+  sudo dnf install -y python3-pip
+  pip3 install ansible
+
+  # verify
+  ansible --version
+
+  ansible --version also prints WHICH config file and module paths
+  are being used - useful when something behaves unexpectedly.
+
+----------------------------------------------------------------
+5. ansible.cfg  (engine settings - see 02_ansible_cfg_example.txt)
+----------------------------------------------------------------
+  Ansible reads the FIRST config file it finds, in this order:
+     1. ANSIBLE_CONFIG  (environment variable)
+     2. ./ansible.cfg   (current directory)   <- most common for a project
+     3. ~/.ansible.cfg  (home directory)
+     4. /etc/ansible/ansible.cfg
+
+----------------------------------------------------------------
+6. FIRST CONNECTIVITY CHECK
+----------------------------------------------------------------
+  # ping ALL hosts in the inventory (this is NOT icmp ping;
+  # it checks SSH + python on the node)
+  ansible all -m ping
+
+  A "pong" reply from each node means we are ready.
+
+----------------------------------------------------------------
+TODAY'S DELIVERABLES (files in this folder)
+----------------------------------------------------------------
+  01_yaml_basics.txt          - YAML rules with examples
+  02_ansible_cfg_example.txt  - a sample ansible.cfg
+  03_first_commands.txt       - the commands we run today
+  99_lab.txt                  - hands-on exercises
+================================================================

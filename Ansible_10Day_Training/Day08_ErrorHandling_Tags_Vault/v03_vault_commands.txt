@@ -1,0 +1,29 @@
+# ================================================================
+# ANSIBLE VAULT - command reference
+# ================================================================
+
+# create a new encrypted file
+ansible-vault create secrets.yml
+
+# encrypt an existing file
+ansible-vault encrypt v02_secrets_example.yml
+
+# view without writing the plaintext to disk
+ansible-vault view secrets.yml
+
+# edit in place
+ansible-vault edit secrets.yml
+
+# change the vault password
+ansible-vault rekey secrets.yml
+
+# decrypt back to plaintext
+ansible-vault decrypt v02_secrets_example.yml
+
+# run a playbook that uses encrypted data (prompt for password)
+ansible-playbook v01_use_secrets.yml --ask-vault-pass
+
+# run non-interactively using a password file
+echo "MyVaultPassword" > .vault_pass
+chmod 600 .vault_pass
+ansible-playbook v01_use_secrets.yml --vault-password-file .vault_pass

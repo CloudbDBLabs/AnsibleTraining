@@ -1,0 +1,96 @@
+================================================================
+ DAY 9 - REUSE: include/import, include_vars, ROLES   (2 hours)
+================================================================
+
+----------------------------------------------------------------
+1. include_tasks  vs  import_tasks   (reuse a task file)
+----------------------------------------------------------------
+  Both pull tasks from another file. The difference is WHEN:
+
+  include_tasks : DYNAMIC - evaluated at RUNTIME (when reached).
+                  Works well with when:, loops, variables.
+  import_tasks  : STATIC  - evaluated at PARSE time (before the run).
+                  Does NOT support runtime when:/loop the same way.
+
+  RULE OF THUMB:  import = static,  include = dynamic.
+
+  # main play
+  tasks:
+    - name: include a task file dynamically
+      include_tasks: install_nginx.yml
+      when: ansible_os_family == "Debian"
+
+----------------------------------------------------------------
+2. include_vars   (load variables from a file or a directory)
+----------------------------------------------------------------
+  - name: load one file
+    include_vars:
+      file: mydir/app.yml
+
+  - name: load EVERY file in a directory
+    include_vars:
+      dir: mydir
+
+  mydir/
+     pkg.yml  -> pkg1: httpd
+     app.yml  -> app_name: flask
+                 app_port: 5000
+     db.yml   -> db_name: oracle
+
+----------------------------------------------------------------
+3. import_playbook   (combine whole playbooks)
+----------------------------------------------------------------
+  Used at the TOP level (not inside tasks). Static, parse time.
+
+  # site.yml
+  - import_playbook: p1.yml
+  - import_playbook: p2.yml
+  - import_playbook: p3.yml
+
+  ansible-playbook site.yml
+
+----------------------------------------------------------------
+4. ROLES   (the proper way to organise large automation)
+----------------------------------------------------------------
+  A role is a standard directory layout. Ansible auto-loads the
+  main.yml inside each sub-directory.
+
+  roles/
+     DB/                       <- the role name (user-defined)
+        tasks/main.yml         <- the tasks
+        handlers/main.yml      <- handlers
+        vars/main.yml          <- variables (high priority)
+        defaults/main.yml      <- default variables (lowest priority)
+        templates/             <- .j2 files
+        files/                 <- static files to copy
+        meta/main.yml          <- author, dependencies
+
+  USE a role in a play:
+    ---
+    - name: role demo
+      hosts: all
+      roles:
+        - DB
+
+  vars/      -> higher priority variables
+  defaults/  -> lowest priority (easy to override)
+  files/     -> static files copied to host
+  meta/      -> dependencies / documentation
+
+----------------------------------------------------------------
+5. ansible-galaxy   (scaffold and download roles)
+----------------------------------------------------------------
+  ansible-galaxy role init DB           # create the directory skeleton
+  ansible-galaxy role list              # roles installed
+  ansible-galaxy role install <name>    # download from Galaxy
+  ansible-galaxy role info <name>
+
+----------------------------------------------------------------
+FILES IN THIS FOLDER
+----------------------------------------------------------------
+  inc01_demo_play.yml      + install_nginx.yml
+  inc02_include_vars.yml   + mydir/{pkg.yml,app.yml,db.yml}
+  imp01_site.yml           + play_a.yml + play_b.yml
+  roles/DB/...   (a complete sample role)
+  role01_use_role.yml      99_lab.txt
+================================================================

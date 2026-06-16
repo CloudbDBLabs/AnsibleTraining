@@ -1,0 +1,10 @@
+---
+- name: with_fileglob - copy all .log files from current dir to /tmp
+  hosts: all
+  tasks:
+    - name: copy logs
+      copy:
+        src: "{{ item }}"
+        dest: /tmp
+      with_fileglob:
+        - "./*.log"

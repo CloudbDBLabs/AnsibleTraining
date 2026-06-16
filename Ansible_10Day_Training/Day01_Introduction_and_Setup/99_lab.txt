@@ -1,0 +1,32 @@
+================================================================
+ DAY 1 - HANDS ON LAB
+================================================================
+
+TASK 1
+  Install Ansible on your control node and run:
+      ansible --version
+  Write down the "config file" path it shows.
+
+TASK 2
+  Create a project folder and inside it create an ansible.cfg
+  that points to an inventory file named "myinventory".
+
+TASK 3
+  Put at least 2 hosts in myinventory under a group called [web].
+
+TASK 4
+  Run:
+      ansible all --list-hosts
+      ansible all -m ping
+  Both your nodes should reply with "pong".
+
+TASK 5  (YAML practice - on paper or a .txt file)
+  Write YAML for:
+   - a scalar  : a port number
+   - a list    : three package names
+   - a dict    : a user with name, uid, shell
+
+SUCCESS CRITERIA
+  - ansible --version works
+  - ansible all -m ping returns pong from every node
+================================================================

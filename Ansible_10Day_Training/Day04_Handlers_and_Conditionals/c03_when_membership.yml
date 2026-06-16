@@ -1,0 +1,22 @@
+---
+- name: membership conditions (in / not in)
+  hosts: localhost
+  vars:
+    pkg1: zsh
+    pkg2: [ksh, sh, gcc, zsh]
+    pkg3: {K1: httpd, K2: python3, K3: bash}
+  tasks:
+    - name: print pkg1 when it equals zsh
+      debug:
+        msg: "{{ pkg1 }}"
+      when: pkg1 == "zsh"
+
+    - name: print first two of pkg2 when pkg1 is a member
+      debug:
+        msg: "{{ pkg2.0 }} {{ pkg2.1 }}"
+      when: pkg1 in pkg2
+
+    - name: print dict values when key exists
+      debug:
+        msg: "{{ pkg3.K1 }} {{ pkg3.K2 }} {{ pkg3.K3 }}"
+      when: "'K1' in pkg3"

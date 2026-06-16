@@ -1,0 +1,17 @@
+---
+- name: filters demo
+  hosts: localhost
+  tasks:
+    - name: define a message
+      set_fact:
+        msg: "  Hello Team, How are you doing  "
+
+    - name: apply filters
+      debug:
+        msg:
+          - "Upper  : {{ msg | upper }}"
+          - "Lower  : {{ msg | lower }}"
+          - "Trim   : '{{ msg | trim }}'"
+          - "Length : {{ msg | trim | length }}"
+          - "Default: {{ undefined_var | default('N/A') }}"
+          - "Join   : {{ ['a','b','c'] | join('-') }}"

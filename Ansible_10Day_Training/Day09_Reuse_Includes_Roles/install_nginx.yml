@@ -1,0 +1,12 @@
+# A reusable TASK FILE (note: no hosts: header, just tasks).
+- name: install the web package
+  dnf:
+    name: httpd
+    state: present
+  become: yes
+
+- name: start the web service
+  service:
+    name: httpd
+    state: started
+  become: yes

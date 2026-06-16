@@ -1,0 +1,6 @@
+---
+- name: play B
+  hosts: localhost
+  tasks:
+    - debug:
+        msg: "This is play B"

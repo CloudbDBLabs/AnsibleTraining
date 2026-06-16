@@ -1,0 +1,29 @@
+---
+- name: tags demo
+  hosts: localhost
+  tasks:
+    - name: task1 (no tag - always runs unless skipped)
+      debug:
+        msg: "task1"
+
+    - name: task2 (tagged install)
+      debug:
+        msg: "task2 - install"
+      tags: install
+
+    - name: task3 (tagged web and prod)
+      debug:
+        msg: "task3 - web/prod"
+      tags:
+        - web
+        - prod
+
+    - name: task4 (special 'never' tag - runs only when asked)
+      debug:
+        msg: "task4 - only with --tags never"
+      tags: never
+# Try:
+#   ansible-playbook tg01_tags.yml --tags install
+#   ansible-playbook tg01_tags.yml --skip-tags install
+#   ansible-playbook tg01_tags.yml --tags never
+#   ansible-playbook tg01_tags.yml --list-tags

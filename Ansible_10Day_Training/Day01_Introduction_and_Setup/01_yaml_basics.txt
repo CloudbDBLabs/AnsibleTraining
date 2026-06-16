@@ -1,0 +1,69 @@
+================================================================
+ YAML BASICS - the format used by all playbooks
+================================================================
+
+RULE 1 : key and value are separated by a colon AND a space
+         myos: Linux            (correct)
+         myos:Linux             (WRONG - no space)
+
+RULE 2 : indentation uses SPACES, never TAB.
+         Use 2 spaces per level (be consistent).
+
+RULE 3 : a list item starts with a dash and a space "- "
+
+RULE 4 : a YAML file usually begins with three dashes  ---
+
+RULE 5 : comments start with #
+
+----------------------------------------------------------------
+SCALAR (a single value)
+----------------------------------------------------------------
+  name: app01
+  port: 8080
+  enabled: true
+
+----------------------------------------------------------------
+LIST / ARRAY  (ordered values)
+----------------------------------------------------------------
+  packages:
+    - httpd
+    - git
+    - unzip
+
+  # inline form (flow style) is also valid:
+  packages: [httpd, git, unzip]
+
+----------------------------------------------------------------
+DICTIONARY / MAP / OBJECT  (key-value pairs)
+----------------------------------------------------------------
+  user:
+    name: app
+    uid: 1001
+    shell: /bin/bash
+
+  # inline form:
+  user: {name: app, uid: 1001, shell: /bin/bash}
+
+----------------------------------------------------------------
+INI vs YAML (why we moved to YAML)
+----------------------------------------------------------------
+  INI  : 1 key = 1 value
+         Type=Ethernet
+         Interface=eth0
+
+  YAML : a key can hold a whole collection
+         interface: [eth0, eth1, eth2]
+
+----------------------------------------------------------------
+A PLAYBOOK IS JUST YAML WITH KNOWN KEYS
+----------------------------------------------------------------
+  ---
+  - name: my first play
+    hosts: node4
+    tasks:
+      - name: run uptime
+        command: uptime
+
+  Known keys here: name, hosts, tasks, command.
+  We will learn each section over the next days.
+================================================================

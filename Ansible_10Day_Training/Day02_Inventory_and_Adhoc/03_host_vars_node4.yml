@@ -1,0 +1,5 @@
+# host_vars/node4.yml  - variables only for node4
+mycmd: uname -a
+myfile: /etc/oracle-release
+ip: 192.168.1.49
+count: 120

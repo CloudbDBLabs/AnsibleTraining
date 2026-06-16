@@ -1,0 +1,11 @@
+---
+- name: sample playbook-1
+  hosts: node4
+  tasks:
+    - name: task1 - execute uptime command
+      command: uptime
+
+    - name: task2 - install ksh package
+      dnf:
+        name: ksh
+        state: present

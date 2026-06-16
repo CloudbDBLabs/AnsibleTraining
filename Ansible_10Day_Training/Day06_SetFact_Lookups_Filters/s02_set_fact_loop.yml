@@ -1,0 +1,15 @@
+---
+- name: set dynamic values inside a loop
+  hosts: localhost
+  tasks:
+    - name: assign each port in turn
+      set_fact:
+        service_ports: "{{ item }}"
+      with_items:
+        - 80
+        - 22
+        - 8080
+        - 9090
+
+    - debug:
+        var: service_ports

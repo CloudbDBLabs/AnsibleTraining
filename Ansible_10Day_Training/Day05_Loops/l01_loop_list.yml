@@ -1,0 +1,11 @@
+---
+- name: loop over a simple list
+  hosts: localhost
+  tasks:
+    - name: print each shell name
+      debug:
+        msg: "shell = {{ item }}"
+      loop:
+        - sh
+        - bash
+        - ksh

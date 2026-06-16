@@ -1,0 +1,31 @@
+================================================================
+ ANSIBLE AWX - quick reference
+================================================================
+
+WHAT IT ADDS ON TOP OF PLAIN ANSIBLE
+  - Web UI and REST API
+  - Role-based access control (who can run what)
+  - Centralised, encrypted credentials
+  - Scheduling, logging, and a visual job history
+  - Workflows (chain job templates with success/failure branches)
+
+CORE OBJECTS (and how they map to what we learned)
+  Project       -> a git repo of playbooks/roles (Days 3-9)
+  Inventory     -> the inventory file (Day 2)
+  Credential    -> SSH key / become password (Day 2 connection vars)
+  Job Template  -> "run THIS playbook against THIS inventory with
+                    THESE credentials"
+  Schedule      -> cron-like timing
+  Execution Env -> a container image with ansible + collections
+
+WORKFLOW (end to end)
+  GitHub (playbooks) --> AWX project sync --> Job Template -->
+  connect with credentials --> run in execution environment -->
+  view logs & results
+
+INSTALL (high level only)
+  - AWX runs on Kubernetes.
+  - Use the AWX Operator on k8s / OpenShift / minikube.
+  - Day-to-day USERS only need the web UI; they pick a Job Template
+    and click Launch.
+================================================================

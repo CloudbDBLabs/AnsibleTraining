@@ -1,0 +1,8 @@
+---
+- name: render host information from a template
+  hosts: node4
+  tasks:
+    - name: generate /tmp/hostinfo.txt
+      template:
+        src: hostinfo.j2
+        dest: /tmp/hostinfo.txt

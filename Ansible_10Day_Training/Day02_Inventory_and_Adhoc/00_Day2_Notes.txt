@@ -1,0 +1,89 @@
+================================================================
+ DAY 2 - INVENTORY & AD-HOC COMMANDS                  (2 hours)
+================================================================
+
+GOAL OF TODAY
+  - Build an inventory (the list of machines we manage)
+  - Attach variables to hosts and groups
+  - Run ad-hoc commands using the most common modules
+
+----------------------------------------------------------------
+1. INVENTORY (INI format)
+----------------------------------------------------------------
+  - Plain text file listing hosts, grouped by purpose.
+  - A host can be an IP or a name resolvable over SSH.
+
+  [web]
+  node4
+  krosumlabs
+
+  [db]
+  node5
+
+  # GROUP OF GROUPS
+  [production:children]
+  web
+  db
+
+----------------------------------------------------------------
+2. CONNECTION VARIABLES (per host)
+----------------------------------------------------------------
+  [web]
+  node4       ansible_python_interpreter="/usr/bin/python3" http_port=80
+  krosumlabs  ansible_user="root" ansible_password="apelix" http_port=8080
+
+  Common connection variables:
+    ansible_user                - login user
+    ansible_password            - login password (prefer SSH keys / vault)
+    ansible_python_interpreter  - which python to use on the node
+    ansible_host                - real IP/DNS if the alias differs
+
+----------------------------------------------------------------
+3. host_vars/  and group_vars/   (cleaner than inline vars)
+----------------------------------------------------------------
+  Directory layout next to the inventory:
+
+    group_vars/
+        web.yml        ->  myfile: /etc/oracle-release
+        db.yml
+    host_vars/
+        node4.yml      ->  mycmd: uname -a
+                           myfile: /etc/oracle-release
+                           ip: 192.168.1.49
+
+  These variables are automatically available to those hosts/groups.
+
+----------------------------------------------------------------
+4. AD-HOC COMMAND SYNTAX
+----------------------------------------------------------------
+  ansible <target> -m <module> -a "<arguments>"
+
+    <target>   group name / host name / "all" / comma list
+    -m module  what to run         (default module is 'command')
+    -a args    module arguments
+    --become   run as root (sudo)
+
+----------------------------------------------------------------
+5. KEY MODULES  (see 04_modules_reference.txt)
+----------------------------------------------------------------
+  ping     - connectivity test
+  command  - run a binary (NO shell features: no pipe | redirect >)
+  shell    - run via /bin/sh (pipes, redirects, $VARS work)
+  raw      - run straight over SSH (works even without python)
+  copy     - push a file to the node
+  file     - create/remove file or directory, set permissions
+  fetch    - pull a file from the node back to control
+  dnf/yum  - install/remove packages (RedHat/Oracle Linux)
+  service  - start/stop/restart/enable a service
+  user     - manage users
+  group    - manage groups
+  setup    - gather facts (information about the node)
+
+----------------------------------------------------------------
+6. command vs shell vs raw
+----------------------------------------------------------------
+  command : default, safest, NO shell metacharacters
+  shell   : use when you need  |  >  <  &&  $VAR
+  raw     : use to bootstrap a node that has no python yet
+            e.g. ansible all -m raw -a "dnf install -y python3"
+================================================================

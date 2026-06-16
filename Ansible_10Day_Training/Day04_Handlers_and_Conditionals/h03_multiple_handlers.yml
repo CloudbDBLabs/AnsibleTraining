@@ -1,0 +1,26 @@
+---
+- name: multiple handlers and notify-a-list
+  hosts: node4
+  tasks:
+    - name: task1 notifies one
+      command: uptime
+      register: result1
+      notify: one
+
+    - name: task2 notifies two
+      shell: lsmod | wc -l
+      register: result2
+      notify: two
+
+    - name: task3 notifies several at once
+      command: date
+      notify:
+        - one
+        - two
+  handlers:
+    - name: one
+      debug:
+        var: result1.stdout
+    - name: two
+      debug:
+        var: result2.stdout

@@ -1,0 +1,11 @@
+---
+- name: ignore_errors demo
+  hosts: node4
+  tasks:
+    - name: this may fail but the play should continue
+      command: /usr/bin/this_might_not_exist
+      ignore_errors: true
+
+    - name: this still runs
+      debug:
+        msg: "we kept going"

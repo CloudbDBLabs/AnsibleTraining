@@ -1,0 +1,10 @@
+---
+- name: with_nested - combine two lists (cartesian product)
+  hosts: localhost
+  tasks:
+    - name: pair every OS with every version
+      debug:
+        msg: "{{ item.0 }} - {{ item.1 }}"
+      with_nested:
+        - [OracleLinux, RedHat, Debian]
+        - ["8", "9"]

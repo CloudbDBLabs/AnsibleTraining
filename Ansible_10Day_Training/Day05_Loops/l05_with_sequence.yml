@@ -1,0 +1,10 @@
+---
+- name: with_sequence - generate a numeric range
+  hosts: node4
+  become: yes
+  tasks:
+    - name: create userA1 .. userA5
+      user:
+        name: "userA{{ item }}"
+        state: present
+      with_sequence: start=1 end=5

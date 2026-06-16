@@ -1,0 +1,20 @@
+# ================================================================
+# DAY 1 - commands we run live
+# ================================================================
+
+# 1. confirm the install
+ansible --version
+
+# 2. confirm the inventory is read
+ansible all --list-hosts
+
+# 3. connectivity check (SSH + python on each node) - expect "pong"
+ansible all -m ping
+ansible node4 -m ping
+
+# 4. a first ad-hoc command (default module is 'command')
+ansible node4 -m command -a "uptime"
+ansible node4 -a "date"          # -m command is implied
+
+# 5. gather information (facts) about a node
+ansible node4 -m setup | head -40

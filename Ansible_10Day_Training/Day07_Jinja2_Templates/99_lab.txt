@@ -1,0 +1,30 @@
+================================================================
+ DAY 7 - HANDS ON LAB
+================================================================
+
+TASK 1
+  Create hostinfo.j2 that prints the hostname, distribution and
+  version using facts. Render it to /tmp/hostinfo.txt with the
+  template module. Verify the file on the node.
+
+TASK 2
+  Create packages.j2 that lists package names using a
+  {% for %} loop. Feed it a list variable pkgs.
+
+TASK 3
+  Create appconfig.j2 using variables AND the default() filter AND
+  the lower filter. Render it with values for dev environment.
+
+TASK 4
+  Add an inline if to appconfig.j2:
+      mode = {{ 'development' if app_env == 'dev' else 'production' }}
+
+TASK 5
+  Create sslconfig.j2 with an {% if ssl_enabled %} / {% else %}
+  block. Render once with ssl_enabled: true and once false.
+
+SUCCESS CRITERIA
+  - rendered files contain substituted values, not {{ }} text
+  - the for loop produces one line per package
+  - the if/else produces different output for true vs false
+================================================================

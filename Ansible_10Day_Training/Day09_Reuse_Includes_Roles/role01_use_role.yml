@@ -1,0 +1,6 @@
+---
+- name: role demo - apply the DB role
+  hosts: localhost
+  gather_facts: no
+  roles:
+    - DB

@@ -1,0 +1,23 @@
+---
+- name: change config then restart only if changed
+  hosts: node4
+  become: yes
+  vars:
+    pkg: httpd
+  tasks:
+    - name: install {{ pkg }}
+      dnf:
+        name: "{{ pkg }}"
+        state: present
+      notify: restart service
+
+    - name: copy the config file
+      copy:
+        src: ./httpd.conf
+        dest: /etc/httpd/conf/httpd.conf
+      notify: restart service
+  handlers:
+    - name: restart service
+      service:
+        name: "{{ pkg }}"
+        state: restarted

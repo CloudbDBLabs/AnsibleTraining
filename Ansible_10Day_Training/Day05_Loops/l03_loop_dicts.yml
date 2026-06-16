@@ -1,0 +1,26 @@
+---
+- name: create groups, then users from a list of dictionaries
+  hosts: node4
+  become: yes
+  tasks:
+    - name: task1 - create department groups
+      group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - sales
+        - prod
+        - HR
+        - QA
+
+    - name: task2 - create users with group and uid
+      user:
+        name: "{{ item.K1 }}"
+        group: "{{ item.K2 }}"
+        uid: "{{ item.K3 }}"
+        state: present
+      loop:
+        - {K1: Ua, K2: sales, K3: 1234}
+        - {K1: Ub, K2: prod,  K3: 2232}
+        - {K1: Uc, K2: HR,    K3: 3435}
+        - {K1: Ud, K2: QA,    K3: 2436}

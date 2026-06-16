@@ -1,0 +1,13 @@
+---
+- name: task1 - show the DB details (from vars/main.yml)
+  debug:
+    msg: "DB name is {{ mydb_name }} running on port {{ mydb_port }}"
+
+- name: task2 - render a config file from the role template
+  template:
+    src: db.conf.j2
+    dest: /tmp/db.conf
+
+- name: task3 - notify the handler
+  command: /bin/true
+  notify: restart db

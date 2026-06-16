@@ -1,0 +1,55 @@
+---
+# Oracle Database prerequisite preparation on Oracle Linux.
+- name: Oracle DB prerequisites
+  hosts: db
+  become: yes
+  vars:
+    oracle_groups:
+      - oinstall
+      - dba
+      - oper
+    oracle_user: oracle
+    oracle_base: /u01/app/oracle
+    prereq_packages:
+      - libaio
+      - unzip
+      - gcc
+      - make
+      - ksh
+  tasks:
+    - name: Install prerequisite packages
+      yum:
+        name: "{{ prereq_packages }}"
+        state: present
+
+    - name: Create Oracle OS groups
+      group:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ oracle_groups }}"
+
+    - name: Create the oracle user
+      user:
+        name: "{{ oracle_user }}"
+        group: oinstall
+        groups: dba,oper
+        shell: /bin/bash
+        state: present
+
+    - name: Create the Oracle base directory
+      file:
+        path: "{{ oracle_base }}"
+        state: directory
+        owner: "{{ oracle_user }}"
+        group: oinstall
+        mode: '0775'
+
+    - name: Set a couple of kernel parameters
+      sysctl:
+        name: "{{ item.k }}"
+        value: "{{ item.v }}"
+        state: present
+        reload: yes
+      loop:
+        - {k: fs.file-max, v: "6815744"}
+        - {k: kernel.shmmax, v: "4294967295"}

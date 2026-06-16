@@ -1,0 +1,22 @@
+---
+- name: lookup plugins demo
+  hosts: localhost
+  tasks:
+    - name: pipe - run a command on the control node
+      set_fact:
+        start_time: "{{ lookup('pipe', 'date +%s') }}"
+
+    - name: env - read an environment variable
+      debug:
+        msg: "HOME = {{ lookup('env', 'HOME') }}"
+
+    - name: file - read a file's contents
+      debug:
+        msg: "release = {{ lookup('file', '/etc/oracle-release') }}"
+
+    - name: pipe again, then compute elapsed seconds
+      set_fact:
+        end_time: "{{ lookup('pipe', 'date +%s') }}"
+
+    - debug:
+        msg: "elapsed = {{ (end_time | int) - (start_time | int) }} second(s)"

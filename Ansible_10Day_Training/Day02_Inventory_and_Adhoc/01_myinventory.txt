@@ -1,0 +1,15 @@
+# ================================================================
+# Sample inventory file (INI format)  ->  ./myinventory
+# ================================================================
+
+[web]
+node4       ansible_python_interpreter="/usr/bin/python3" http_port=80
+krosumlabs  ansible_user="root" ansible_password="apelix" ansible_python_interpreter="/bin/python" http_port=8080
+
+[db]
+node5       ansible_python_interpreter="/usr/bin/python3"
+
+# group of groups
+[production:children]
+web
+db

@@ -1,0 +1,64 @@
+================================================================
+ DAY 7 - JINJA2 TEMPLATES                             (2 hours)
+================================================================
+
+GOAL OF TODAY
+  - Generate configuration files / scripts dynamically
+  - Learn jinja2 syntax: variables, expressions, if, for, filters
+
+----------------------------------------------------------------
+1. WHY TEMPLATES
+----------------------------------------------------------------
+  - copy     : sends a file AS-IS (no substitution).
+  - template : renders a .j2 file FIRST (fills in variables, runs
+               loops/conditions), THEN copies the result.
+
+  A template is a normal text file that contains:
+     static text  +  variables  +  logic (if / for / filter)
+  Template files end with .j2
+
+  Used to produce: config files, repo files, scripts, reports - any
+  text file that should differ per host or per environment.
+
+----------------------------------------------------------------
+2. JINJA2 SYNTAX
+----------------------------------------------------------------
+  Variable    {{ variable }}             e.g. {{ ansible_hostname }}
+  Expression  {{ expression }}           e.g. {{ 10 + 20 }}
+  If          {% if condition %}
+                ...
+              {% else %}
+                ...
+              {% endif %}
+  For loop    {% for x in collection %}
+                {{ x }}
+              {% endfor %}
+  Filter      {{ value | filter }}        e.g. {{ name | lower }}
+  Comment     {# this line is not rendered #}
+
+----------------------------------------------------------------
+3. USING THE template MODULE
+----------------------------------------------------------------
+    - name: render a config from a template
+      template:
+        src: appconfig.j2
+        dest: /tmp/app.conf
+        owner: root
+        mode: '0644'
+
+  The .j2 sees ALL the play's variables and facts.
+
+----------------------------------------------------------------
+4. SINGLE-LINE (INLINE) IF
+----------------------------------------------------------------
+  DEBUG = {{ 'true' if app_env == 'dev' else 'false' }}
+
+----------------------------------------------------------------
+FILES IN THIS FOLDER
+----------------------------------------------------------------
+  t01_hostinfo.yml          + hostinfo.j2
+  t02_packages_loop.yml     + packages.j2
+  t03_appconfig.yml         + appconfig.j2
+  t04_conditional.yml       + sslconfig.j2
+  99_lab.txt
+================================================================

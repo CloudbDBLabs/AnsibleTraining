@@ -1,0 +1,7 @@
+# SSL section
+{% if ssl_enabled %}
+ssl_certificate     {{ ssl_cert }};
+ssl_certificate_key {{ ssl_key }};
+{% else %}
+# ssl not enabled
+{% endif %}

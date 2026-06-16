@@ -1,0 +1,15 @@
+---
+- name: create several users with one looping task
+  hosts: node4
+  become: yes
+  tasks:
+    - name: create users demo1..demo5
+      user:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - demo1
+        - demo2
+        - demo3
+        - demo4
+        - demo5
