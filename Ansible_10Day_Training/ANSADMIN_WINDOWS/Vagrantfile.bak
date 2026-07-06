@@ -1,0 +1,35 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "oraclelinux/8"
+  # The url from where the 'config.vm.box' box will be fetched if it
+  # doesn't already exist on the user's system.
+  config.vm.box_url = "https://oracle.github.io/vagrant-projects/boxes/oraclelinux/8.json"
+
+  # Hostname for the VM
+  config.vm.hostname = "anscontrol"
+
+  # Private network — host-only adapter with a static IP
+  config.vm.network "private_network", ip: "192.168.56.100"
+
+  # Public network — bridged adapter with a static IP
+  # Replace "eth0" with the name of the host NIC you want to bridge onto
+  # (run `vagrant up` once without :bridge to get a pick-list if unsure).
+  config.vm.network "public_network", ip: "192.168.0.100", bridge: "eth0"
+
+  # VirtualBox provider settings: 2 GB RAM, 2 CPUs
+  config.vm.provider "virtualbox" do |vb|
+    vb.name   = "anscontrol"
+    vb.memory = 2048
+    vb.cpus   = 2
+	vb.customize ["modifyvm", :id, "--usb", "off"]
+    vb.customize ["modifyvm", :id, "--usbehci", "off"]
+    vb.customize ["modifyvm", :id, "--usbxhci", "off"]
+  end
+  
+  config.vm.provision "shell", inline: <<-SHELL
+    sh /vagrant/scripts/setup.sh
+  SHELL
+  
+end
