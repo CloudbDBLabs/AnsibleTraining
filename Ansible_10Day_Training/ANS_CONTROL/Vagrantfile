@@ -1,0 +1,29 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Variables
+var_box            = 'oraclelinux/8-aarch64'
+var_vm_name        = 'ANS_CONTROL'
+var_ip             = "192.168.56.100"
+var_mem_size       = 2048  # More would be better.
+var_cpus           = 2
+var_non_rotational = 'on' # SSD
+
+Vagrant.configure("2") do |config|
+  config.vm.box = var_box
+
+  #config.vm.network "private_network", ip: var_ip
+  #config.vm.network "public_network",bridge: "en0: Wi-Fi",use_dhcp_assigned_default_route: true,auto_config: true
+  config.vm.network "public_network",bridge: "en0: Wi-Fi",nic_type: "virtio", auto_config: true
+  config.vm.network "private_network", ip: var_ip,virtualbox__intnet: "private",nic_type: "virtio"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = var_mem_size
+    vb.cpus   = var_cpus
+    vb.name   = var_vm_name
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    sh /vagrant/scripts/setup.sh
+  SHELL
+end
