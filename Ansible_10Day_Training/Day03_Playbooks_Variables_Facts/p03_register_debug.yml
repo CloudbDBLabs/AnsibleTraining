@@ -1,6 +1,7 @@
 ---
 - name: register and debug demo
-  hosts: node4
+  hosts: 192.168.0.109
+  become: yes
   tasks:
     - name: task-1 run uptime and capture the result
       command: uptime
