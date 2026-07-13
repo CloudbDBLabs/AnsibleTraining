@@ -1,6 +1,7 @@
 ---
 - name: variable section demo
-  hosts: localhost
+  hosts: 192.168.0.109
+  become: yes
   vars:
     myos: Linux
     myversion: 5.67
