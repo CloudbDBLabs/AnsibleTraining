@@ -1,0 +1,435 @@
+---
+# ===========================================================================
+#  EXADATA HEALTH CHECK  --  PRE-PATCH VALIDATION PLAYBOOK
+# ===========================================================================
+#
+#  PURPOSE
+#     Run the existing EXAHLTHCHK framework across every cluster in one
+#     environment, wait for all of them to finish, then produce and email a
+#     single consolidated HTML report for that environment.
+#
+#  OPERATOR INPUT
+#     target_env = DEV | UAT | DR | PROD        (AWX survey answer)
+#     Nothing else. Everything below is derived from it.
+#
+#  WHAT IT DOES NOT DO
+#     - It does not delete, rotate or archive any log. EXAHLTHCHK owns its
+#       own log lifecycle and this playbook never touches it.
+#     - It does not change any database, cluster or OS configuration. Every
+#       command it runs is a read-only validation or a report build.
+#
+#  WHY THREE PLAYS
+#     Ansible finishes a play on ALL of its hosts before it starts the next
+#     play. That property is the synchronisation barrier this playbook needs:
+#     the report must not be built until every cluster has finished checking.
+#     Putting the report in its own play guarantees that ordering without any
+#     polling, lock file or sleep. It is the reason the work is split this way
+#     rather than written as one play with a conditional at the end.
+#
+#     Play 1  localhost        decide which clusters are in scope
+#     Play 2  <cluster>db01    run EXAHLTHCHK on each cluster, in parallel
+#     ---- barrier: every cluster above must complete before we continue ----
+#     Play 3  report node      build the HTML report and email it
+#
+#  HOW THE DERIVED NODES ARE ADDRESSED
+#     The node names this playbook works with (xdt505db01) are built at run
+#     time and exist only in memory, so nothing tells Ansible how to reach
+#     them. Where corporate DNS resolves them -- which is the case in every
+#     real environment -- the name alone is enough and no extra configuration
+#     is required. Where it does not, the address is supplied per cluster in
+#     the inventory as first_node_ip and carried onto the derived host as
+#     ansible_host by task 1.4.
+#
+#     Both cases are handled by one expression. first_node_ip is optional:
+#     when it is absent the fallback is the node name itself (plus node_domain
+#     if one is set), which is exactly the behaviour of a playbook that had
+#     never heard of ansible_host. Inventories that rely on DNS therefore need
+#     no change at all, and no environment needs a conditional.
+#
+# ===========================================================================
+
+
+# ===========================================================================
+#  PLAY 1 -- RESOLVE THE ENVIRONMENT INTO A LIST OF TARGET NODES
+#
+#  Runs on the AWX control node only. No Exadata host is contacted here.
+#
+#  The problem this play solves: inventory.ini lists CLUSTER names (xdt505),
+#  but EXAHLTHCHK has to be executed on a NODE (xdt505db01). Nothing in the
+#  inventory holds that node name, so this play derives it and registers the
+#  derived hosts in memory for the plays that follow.
+# ===========================================================================
+- name: Resolve the target environment into a list of cluster head nodes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - vars/exa_healthcheck.yml
+
+  tasks:
+
+    # -----------------------------------------------------------------
+    # TASK 1.1
+    # WHAT  Reject the run unless target_env is one of the four we know.
+    # WHY   Every later task builds paths and picks inventory groups from
+    #       this one value. A typo such as "Prod " or "PRE" would otherwise
+    #       surface much later as an empty cluster list or an empty report,
+    #       long after the playbook has started connecting to hosts. Failing
+    #       on the first task keeps the blast radius at zero.
+    # -----------------------------------------------------------------
+    - name: Validate the environment supplied by the operator
+      ansible.builtin.assert:
+        that:
+          - target_env is defined
+          - target_env | trim | length > 0
+          - target_env | upper in env_group_map
+        fail_msg: >-
+          target_env must be one of {{ env_group_map.keys() | list | join(', ') }}.
+          Received: '{{ target_env | default("<not supplied>") }}'
+        success_msg: "Environment {{ target_env | upper }} accepted."
+        quiet: true
+
+    # -----------------------------------------------------------------
+    # TASK 1.2
+    # WHAT  Upper-case the environment name and look up its inventory group.
+    # WHY   The operator may type "dev" or "Dev"; the inventory group names
+    #       are fixed strings. env_group_map in vars/ is the single place
+    #       where "DEV" is tied to "[dev_clusters]", so a future inventory
+    #       rename is a one-line change in one file rather than an edit
+    #       scattered through the playbook.
+    # -----------------------------------------------------------------
+    - name: Normalise the environment name and select its inventory group
+      ansible.builtin.set_fact:
+        env_name: "{{ target_env | upper }}"
+        cluster_group: "{{ env_group_map[target_env | upper] }}"
+
+    # -----------------------------------------------------------------
+    # TASK 1.3
+    # WHAT  Confirm that group exists in the inventory and is not empty.
+    # WHY   An empty or missing group is silent by default: Ansible would
+    #       simply loop zero times, every play would report "ok", and the
+    #       report would come out blank with no indication that the cause
+    #       was a missing inventory group. This turns that into a clear
+    #       failure that names the groups actually present.
+    # -----------------------------------------------------------------
+    - name: Confirm the inventory group exists and contains clusters
+      ansible.builtin.assert:
+        that:
+          - cluster_group in groups
+          - groups[cluster_group] | default([]) | length > 0
+        fail_msg: >-
+          Inventory group [{{ cluster_group }}] is missing or empty.
+          Groups found in this inventory: {{ groups.keys() | list | join(', ') }}
+        quiet: true
+
+    # -----------------------------------------------------------------
+    # TASK 1.4
+    # WHAT  For each cluster in the group, register <cluster>db01 as an
+    #       in-memory host in the group 'exa_check_nodes', together with the
+    #       address Ansible should use to reach it.
+    # WHY   This is the cluster-name to node-name translation. The suffix
+    #       lives in vars/ as first_node_suffix, and cluster_first_node
+    #       holds any cluster that does not follow the convention, so an
+    #       exception never requires editing this task.
+    #       add_host is used rather than a static inventory group because
+    #       the node list is a function of the operator's input and would
+    #       otherwise have to be maintained four times over in inventory.ini.
+    #
+    #       ansible_host is set because a host invented by add_host has no
+    #       address of its own: without it Ansible can only fall back to
+    #       resolving the derived name, which fails wherever that name is not
+    #       in DNS. The value is taken from first_node_ip on the cluster if
+    #       the inventory supplies one, and otherwise falls back to the node
+    #       name (with node_domain appended when set), which is what DNS-
+    #       resolvable environments want. One expression, no conditionals,
+    #       identical behaviour in the lab and in production.
+    # NOTE  The loop label prints "xdt505 -> xdt505db01" for each cluster so
+    #       the AWX job output shows the translation that was applied.
+    # -----------------------------------------------------------------
+    - name: Register the first DB node of every cluster as a check target
+      vars:
+        node_name: "{{ cluster_first_node[item] | default(item ~ first_node_suffix) }}"
+      ansible.builtin.add_host:
+        name: "{{ node_name }}"
+        ansible_host: >-
+          {{ hostvars[item].first_node_ip
+             | default(node_name ~ (node_domain | default(''))) }}
+        groups: exa_check_nodes
+        cluster_name: "{{ item }}"
+        env_name: "{{ env_name }}"
+      loop: "{{ groups[cluster_group] }}"
+      loop_control:
+        label: "{{ item }} -> {{ node_name }}"
+      changed_when: false
+
+    # -----------------------------------------------------------------
+    # TASK 1.5
+    # WHAT  Register the single node that will build the report.
+    # WHY   The report is always produced from one fixed node regardless of
+    #       environment, because the HTML is assembled from the shared /tnt
+    #       mount which every cluster writes into. Building it in one place
+    #       means one file, one timestamp and no possibility of four
+    #       partially-complete reports racing each other.
+    #       This host may also appear in exa_check_nodes (it does for DEV);
+    #       Ansible merges the two registrations, which is harmless.
+    #
+    #       report_node comes from vars/ as a bare name, so it needs the same
+    #       addressing treatment as the check nodes above. report_node_ip is
+    #       optional and follows the same rule: set it only where DNS cannot
+    #       resolve the name.
+    #
+    #       The address is resolved in three steps, and the order matters.
+    #       When the report node is also a check node -- which it is for DEV,
+    #       where the report is built on xdt505db01 -- task 1.4 has already
+    #       registered this host with the correct address. add_host merges
+    #       variables onto an existing host, so naming it again here would
+    #       otherwise overwrite that good address with the bare-name fallback
+    #       and break the report play only. Reading the existing ansible_host
+    #       as the middle fallback keeps whatever task 1.4 established.
+    # -----------------------------------------------------------------
+    - name: Register the node that will generate the report
+      ansible.builtin.add_host:
+        name: "{{ report_node }}"
+        ansible_host: >-
+          {{ report_node_ip
+             | default(hostvars[report_node].ansible_host
+             | default(report_node ~ (node_domain | default('')))) }}
+        groups: exa_report_node
+        env_name: "{{ env_name }}"
+      changed_when: false
+
+    # -----------------------------------------------------------------
+    # TASK 1.6
+    # WHAT  Print the full plan before any Exadata host is touched.
+    # WHY   This is the audit record for the change ticket. It states which
+    #       environment was requested, which inventory group that resolved
+    #       to, which nodes will be contacted and which node will publish
+    #       the report. If a cluster is missing or a node name is wrong, it
+    #       is visible here rather than being discovered halfway through.
+    #       The connection targets are printed alongside the node names so
+    #       that an addressing mistake -- a wrong first_node_ip, or a name
+    #       that will not resolve -- is caught here too, before the first
+    #       SSH attempt rather than as a batch of UNREACHABLE errors.
+    # -----------------------------------------------------------------
+    - name: Display the execution plan for this run
+      ansible.builtin.debug:
+        msg:
+          - "Environment requested : {{ env_name }}"
+          - "Inventory group       : [{{ cluster_group }}]"
+          - "Clusters in scope     : {{ groups[cluster_group] | join(', ') }}"
+          - "EXAHLTHCHK will run on: {{ groups['exa_check_nodes'] | join(', ') }}"
+          - "Connection targets    : {{ groups['exa_check_nodes']
+                                        | map('extract', hostvars, 'ansible_host')
+                                        | list | join(', ') }}"
+          - "Report will be built on: {{ report_node }} ({{ hostvars[report_node].ansible_host }})"
+          - "Report command        : {{ report_script }} --env {{ env_name }} --mail"
+
+
+# ===========================================================================
+#  PLAY 2 -- RUN EXAHLTHCHK ON THE FIRST NODE OF EVERY CLUSTER
+#
+#  Runs in parallel across clusters. Each node runs the framework exactly as
+#  a DBA would run it by hand:
+#
+#      cd <HealthCheck base> && ./EXAHLTHCHK -l exa -c all
+#
+#  Nothing is passed in and nothing is cleaned up afterwards. EXAHLTHCHK
+#  decides where its logs go and how long they are kept.
+# ===========================================================================
+- name: Run the Exadata health checks on the first node of each cluster
+  hosts: exa_check_nodes
+  gather_facts: false
+
+  # EXAHLTHCHK refuses to run as anyone but root -- it exits immediately with
+  # "Please run from root user". The machine credential therefore needs
+  # privilege escalation.
+  become: true
+  become_user: root
+
+  # 0 means all clusters at once, which is the normal case. Set check_serial
+  # to 1 or 2 if the shared /tnt mount or the ILOM/dcli calls need throttling,
+  # or when you want the job output to read one cluster at a time.
+  serial: "{{ check_serial | default(0) }}"
+
+  vars_files:
+    - vars/exa_healthcheck.yml
+
+  tasks:
+
+    # -----------------------------------------------------------------
+    # TASK 2.1
+    # WHAT  Confirm the EXAHLTHCHK script is present and executable here.
+    # WHY   A missing script produces a shell error part-way through the run
+    #       on that one node, while the other clusters carry on -- giving a
+    #       report that is quietly missing a cluster. Checking first turns
+    #       that into an immediate, obvious failure naming the host.
+    # -----------------------------------------------------------------
+    - name: Verify the EXAHLTHCHK script exists on this node
+      ansible.builtin.stat:
+        path: "{{ healthcheck_script }}"
+      register: hc_script
+
+    - name: Fail early if EXAHLTHCHK is missing or not executable
+      ansible.builtin.assert:
+        that:
+          - hc_script.stat.exists | default(false)
+          - hc_script.stat.executable | default(false)
+        fail_msg: >-
+          {{ healthcheck_script }} is missing or not executable on
+          {{ inventory_hostname }}. Check that the shared mount is present.
+        quiet: true
+
+    # -----------------------------------------------------------------
+    # TASK 2.2
+    # WHAT  Run the full Exadata check suite and wait for it to finish.
+    # WHY   'async' with 'poll' is used instead of a plain command because
+    #       the suite takes minutes -- cluvfy alone can run for several --
+    #       and a long-running synchronous SSH session is vulnerable to an
+    #       idle timeout on the network path. With async, Ansible starts the
+    #       job, releases the connection, and reconnects every 15 seconds to
+    #       ask whether it has finished. The task still does not return until
+    #       the script exits, so the play still waits exactly as required.
+    #
+    #       'failed_when: false' is deliberate. A failed CHECK is a finding
+    #       that belongs in the report; it is not a failure of the playbook.
+    #       If this task failed the host, that cluster would drop out of the
+    #       run and the report would be missing exactly the cluster with the
+    #       problem. Genuine execution failures are caught by task 2.3.
+    # -----------------------------------------------------------------
+    - name: Execute EXAHLTHCHK -l exa -c all and wait for completion
+      ansible.builtin.shell:
+        cmd: "./{{ healthcheck_script | basename }} -l exa -c all"
+        chdir: "{{ healthcheck_base }}"
+      register: hc_run
+      changed_when: false
+      failed_when: false
+      async: "{{ healthcheck_timeout }}"
+      poll: 15
+
+    # -----------------------------------------------------------------
+    # TASK 2.3
+    # WHAT  Separate "the script ran and reported findings" from "the script
+    #       could not run at all", and fail only on the latter.
+    # WHY   EXAHLTHCHK returns a non-zero status for ordinary conditions, so
+    #       the return code alone cannot be trusted as a health signal. What
+    #       does indicate a real problem is the job never finishing (async
+    #       timeout) or the shell being unable to start it at all. Those are
+    #       the two cases raised here.
+    # -----------------------------------------------------------------
+    - name: Fail if EXAHLTHCHK could not be executed or timed out
+      ansible.builtin.assert:
+        that:
+          - hc_run.finished | default(0) | int == 1
+          - hc_run.rc is defined
+          - hc_run.rc != 127
+        fail_msg: >-
+          EXAHLTHCHK did not complete on {{ inventory_hostname }}
+          (cluster {{ cluster_name }}). rc={{ hc_run.rc | default('n/a') }},
+          finished={{ hc_run.finished | default('n/a') }}.
+          Raise healthcheck_timeout if the suite legitimately runs longer
+          than {{ healthcheck_timeout }} seconds on this cluster.
+        quiet: true
+
+    # -----------------------------------------------------------------
+    # TASK 2.4
+    # WHAT  Record that this cluster completed, in the job output.
+    # WHY   Gives the change ticket a per-cluster completion line, and makes
+    #       it obvious in the AWX output which clusters contributed to the
+    #       report that follows.
+    # -----------------------------------------------------------------
+    - name: Confirm completion for this cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster_name }} ({{ inventory_hostname }}): EXAHLTHCHK completed, rc={{ hc_run.rc | default('n/a') }}"
+
+
+# ===========================================================================
+#  PLAY 3 -- BUILD AND EMAIL THE CONSOLIDATED REPORT
+#
+#  This play does not start until Play 2 has finished on EVERY cluster. That
+#  is the guarantee described at the top of the file, and it is the reason
+#  the report can safely assume all logs are already on disk.
+#
+#  Runs on one node only, for every environment.
+# ===========================================================================
+- name: Generate and email the consolidated HTML report
+  hosts: exa_report_node
+  gather_facts: false
+  become: true
+  become_user: root
+  vars_files:
+    - vars/exa_healthcheck.yml
+
+  tasks:
+
+    # -----------------------------------------------------------------
+    # TASK 3.1
+    # WHAT  Confirm the report generator is present and executable.
+    # WHY   Same reasoning as task 2.1, but more important here: at this
+    #       point every cluster has already spent minutes running checks.
+    #       Discovering a missing script now would waste that entire run,
+    #       so the message names the file and the host explicitly.
+    # -----------------------------------------------------------------
+    - name: Verify the report generator exists on the report node
+      ansible.builtin.stat:
+        path: "{{ report_script }}"
+      register: rpt_script
+
+    - name: Fail if the report generator is missing or not executable
+      ansible.builtin.assert:
+        that:
+          - rpt_script.stat.exists | default(false)
+          - rpt_script.stat.executable | default(false)
+        fail_msg: >-
+          {{ report_script }} is missing or not executable on
+          {{ inventory_hostname }}.
+        quiet: true
+
+    # -----------------------------------------------------------------
+    # TASK 3.2
+    # WHAT  Build the HTML report for this environment and email it.
+    # WHY   --env is set from the operator's original answer, so one job
+    #       template covers all four environments. --mail sends the result:
+    #       the overview is rendered inline in the mail body and the full
+    #       interactive report is attached. Recipients are configured inside
+    #       exa_html_report.sh, not here, so distribution lists can be
+    #       changed without editing or re-approving this playbook.
+    #
+    #       Exit code handling: the generator returns 0 when nothing failed,
+    #       1 when at least one check failed OR no results were found, and 2
+    #       for a usage or input error. 0 and 1 are both successful report
+    #       builds, so only 2 fails the task.
+    # -----------------------------------------------------------------
+    - name: Generate the environment report and send it by email
+      ansible.builtin.shell:
+        cmd: "./{{ report_script | basename }} --env {{ env_name }} --mail"
+        chdir: "{{ healthcheck_base }}"
+      register: report_run
+      changed_when: report_run.rc in [0, 1]
+      failed_when: report_run.rc not in [0, 1]
+
+    # -----------------------------------------------------------------
+    # TASK 3.3
+    # WHAT  Print the generator's own output into the AWX job log.
+    # WHY   The generator prints the counts it produced -- clusters, checks,
+    #       lookups, Success/Failed/NotApplicable -- plus the report path and
+    #       the mail delivery result. Surfacing it here means the AWX job log
+    #       is a complete record on its own, and anyone reviewing the ticket
+    #       can see the outcome without opening the report or the mailbox.
+    # -----------------------------------------------------------------
+    - name: Show the report generator output
+      ansible.builtin.debug:
+        var: report_run.stdout_lines
+
+    # -----------------------------------------------------------------
+    # TASK 3.4
+    # WHAT  State the overall outcome in one line.
+    # WHY   Closing summary for the job log and the change ticket. rc 1 is
+    #       called out explicitly as "review required" so that a green AWX
+    #       job is never mistaken for a clean health check.
+    # -----------------------------------------------------------------
+    - name: Report the overall outcome
+      ansible.builtin.debug:
+        msg: >-
+          {{ env_name }} health check complete.
+          {{ 'All checks passed.' if report_run.rc == 0
+             else 'One or more checks FAILED or produced no result - review the report.' }}
