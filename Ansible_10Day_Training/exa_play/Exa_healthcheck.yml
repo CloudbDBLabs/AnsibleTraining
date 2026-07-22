@@ -64,7 +64,7 @@
   connection: local
   gather_facts: false
   vars_files:
-    - vars/exa_healthcheck.yml
+    - exa_play/exa_healthcheck.yml
 
   tasks:
 
