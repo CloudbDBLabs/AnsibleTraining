@@ -1,6 +1,6 @@
 ---
 - name: sample playbook-1
-  hosts: 192.168.0.102
+  hosts: localhost
   become: yes
   tasks:
     - name: task1 - execute uptime command
