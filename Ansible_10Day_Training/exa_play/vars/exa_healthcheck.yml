@@ -36,7 +36,7 @@ cluster_first_node: {}
 # --- the single node that always builds the report ------------------------
 # Fixed for every environment. It reads the shared mount, so it does not
 # need to belong to the environment being reported on.
-report_node: xdt505db01
+report_node: 192.168.56.112
 
 # --- paths on the shared mount --------------------------------------------
 healthcheck_base:   /tnt/canon/dba/oracle/css/validation/pre_checks/HealthCheck
