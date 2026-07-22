@@ -1,0 +1,54 @@
+---
+# ===========================================================================
+#  Variables for exa_healthcheck.yml
+#
+#  Anything set as an AWX extra variable or survey answer overrides these.
+#  This file is the only place that needs editing when paths or node names
+#  change; the playbook itself contains no hard-coded paths.
+# ===========================================================================
+
+# --- environment to inventory group ---------------------------------------
+# Keys are what the operator selects (they are upper-cased before lookup).
+# Values must match the [group] headings in inventory.ini EXACTLY.
+#
+# NOTE the inconsistency in the current inventory, reproduced faithfully
+# here: dev_clusters is lower case, UAT_clusters and PROD_clusters are
+# mixed case, and DR_cluster is SINGULAR while the rest are plural.
+# The map absorbs that, so nothing is broken. It is still worth
+# standardising the inventory at some point, because the next person to
+# add a group will follow whichever pattern they happen to see first.
+env_group_map:
+  DEV:  dev_clusters
+  UAT:  UAT_clusters
+  DR:   DR_cluster
+  PROD: PROD_clusters
+
+# --- cluster name to node name --------------------------------------------
+# Inventory holds cluster names (xdt505); checks run on the first DB node
+# (xdt505db01).
+first_node_suffix: db01
+
+# Exceptions only. Any cluster whose first node is not <cluster>db01:
+#   cluster_first_node:
+#     xdp590: xdp590db03
+cluster_first_node: {}
+
+# --- the single node that always builds the report ------------------------
+# Fixed for every environment. It reads the shared mount, so it does not
+# need to belong to the environment being reported on.
+report_node: xdt505db01
+
+# --- paths on the shared mount --------------------------------------------
+healthcheck_base:   /tnt/canon/dba/oracle/css/validation/pre_checks/HealthCheck
+healthcheck_script: "{{ healthcheck_base }}/EXAHLTHCHK"
+report_script:      "{{ healthcheck_base }}/exa_html_report.sh"
+
+# --- behaviour -------------------------------------------------------------
+# Maximum seconds one cluster's full check suite may take before the task is
+# treated as hung. The suite normally completes in 2-4 minutes; the default
+# below is deliberately generous because cluvfy is unpredictable on a busy
+# cluster.
+healthcheck_timeout: 3600
+
+# 0 = every cluster in parallel. Set to 1 or 2 to throttle.
+check_serial: 0
