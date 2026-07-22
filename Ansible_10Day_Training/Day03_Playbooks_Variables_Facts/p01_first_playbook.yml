@@ -1,6 +1,6 @@
 ---
 - name: sample playbook-1
-  hosts: DEV
+  hosts: DEV_TEST
   become: yes
   tasks:
     - name: task1 - execute uptime command
